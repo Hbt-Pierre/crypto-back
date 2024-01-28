@@ -6,11 +6,11 @@ const storageUtils = require('./storage.utils')
 const cryptoUtils = require('./crypto.utils')
 
 
-exports.openVault = function (vaultName: string, vaultPassword: string): OpenVault {
+exports.openVault = function (vaultId: string, vaultPassword: string): OpenVault {
     let vaults = storageUtils.getVaults();
     if(vaults == null) throw VaultError.OPEN_VAULT_READING_FAILED;
 
-    let myVault = vaults.find(v => v.name == vaultName);
+    let myVault = vaults.find(v => v.id == vaultId);
     if (myVault == null) throw VaultError.OPEN_VAULT_NOT_FOUND;
 
     const decryptedContent = cryptoUtils.decrypt(myVault.content,vaultPassword);

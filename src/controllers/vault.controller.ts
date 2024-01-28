@@ -15,8 +15,8 @@ const vaultUtils = require('../utils/vault.utils')
 exports.create = async function (req: Request, res: Response) {
 
     //Contrôle des arguments
-    const masterKey = req.query["password"]
-    const name = req.query["name"]
+    const masterKey = req.body["password"]
+    const name = req.body["name"]
 
     if(masterKey == undefined){
         res.status(400).json({error : "Merci d'ajouter le mot de passe maitre"});
@@ -54,7 +54,7 @@ exports.create = async function (req: Request, res: Response) {
 
     //Mise à jour
     storageUtils.ereaseAndWriteStorage(vaults);
-    res.status(201).json({success: true});
+    res.status(201).json(newVault);
 };
 
 /**
@@ -67,21 +67,29 @@ exports.open = async function (req: Request, res:Response) {
 
     //Contrôle des arguments
     const masterKey = req.query["password"];
-    const vName = req.query["name"];
+    const vId = req.query["id"];
+
+    if(!masterKey && !vId){
+        //Si aucun paramètre, on liste les coffres
+
+        res.json(storageUtils.getVaults());
+        return;
+    }
+
 
     if(masterKey == undefined){
         res.status(400).json({error : "Merci d'ajouter le mot de passe maitre"});
         return
     }
 
-    if(vName == undefined){
-        res.status(400).json({error : "Merci d'ajouter le nom du coffre"});
+    if(vId == undefined){
+        res.status(400).json({error : "Merci d'ajouter l'identifiant du coffre"});
         return
     }
 
     //On récupère le fichier
     try{
-        let vault = vaultUtils.openVault(vName,masterKey);
+        let vault = vaultUtils.openVault(vId,masterKey);
         res.json(vault);
     }catch (err){
         res.status(err.httpCode).json({error: err.msg});
