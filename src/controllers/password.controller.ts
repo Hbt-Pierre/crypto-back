@@ -30,7 +30,33 @@ exports.delete = async function (req: Request, res:Response) {
         res.status(err.httpCode).json({error: err.msg});
     }
 }
-exports.edit = async function (req: Request, res:Response) {}
+exports.edit = async function (req: Request, res:Response) {
+    const vPass = req.body["vaultPassword"];
+    const vId = req.body["id"];
+
+    const sdId = req.body["passwordId"];
+    const sdPassword = req.body["password"];
+
+    if(!vPass || !vId || !sdId || !sdPassword ){
+        res.status(400).json({error : "Merci d'ajouter dans le corps de la requête les valeurs suivantes : id,vaultPassword,passwordId,sdPassword"});
+        return
+    }
+
+    //On récupère le fichier
+    try{
+        let vault = vaultUtils.openVault(vId,vPass);
+
+        let sdToEdit =vault.content.find(sd => sd.id == sdId);
+        sdToEdit.password = sdPassword;
+
+        let lockedVault = vaultUtils.lockVault(vault,vPass);
+
+        storageUtils.updateVault(lockedVault)
+        res.status(200).json(vault);
+    }catch (err){
+        res.status(err.httpCode).json({error: err.msg});
+    }
+}
 
 
 exports.add = async function (req: Request, res:Response) {
