@@ -8,11 +8,13 @@ const storageUtils = require("./utils/storage.utils");
 
 //Import des routes
 const vaultRoute = require("./routes/vault.route");
+const passwordRoute = require("./routes/password.route");
 app.use(bodyParser.json());
 
 
 //Déclaration des routes
 app.use("/vault",vaultRoute);
+app.use("/password",passwordRoute);
 
 
 //Lancement du serveur Web et vérification

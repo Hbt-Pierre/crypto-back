@@ -1,11 +1,18 @@
 import {OpenVault} from "../models/open-vault.model";
 import {SensitiveData} from "../models/sensitive-data.model";
 import {VaultError} from "../models/vault-error.model";
+import {Vault} from "../models/vault.model";
 
 const storageUtils = require('./storage.utils')
 const cryptoUtils = require('./crypto.utils')
 
 
+/**
+ * La méthode décriffre le coffre donné à l'aide du mot de passe
+ *
+ * @param vaultId
+ * @param vaultPassword
+ */
 exports.openVault = function (vaultId: string, vaultPassword: string): OpenVault {
     let vaults = storageUtils.getVaults();
     if(vaults == null) throw VaultError.OPEN_VAULT_READING_FAILED;
@@ -24,4 +31,22 @@ exports.openVault = function (vaultId: string, vaultPassword: string): OpenVault
     return decryptedVault as OpenVault;
 }
 
+
+/**
+ * La méthode chiffre un coffre et recalcule le hash d'intégrité
+ * @param openVault
+ * @param vaultPassword
+ */
+exports.lockVault = function (openVault: OpenVault,vaultPassword: string): Vault {
+    let jsonContent = JSON.stringify(openVault.content);
+
+    let lockVault = {
+        id : openVault.id,
+        name : openVault.name,
+        content : cryptoUtils.encrypt(jsonContent,vaultPassword),
+        verification: cryptoUtils.hash(jsonContent)
+    } as Vault;
+
+    return lockVault;
+}
 

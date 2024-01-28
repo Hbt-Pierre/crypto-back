@@ -1,4 +1,5 @@
 import {Vault} from "../models/vault.model";
+import {VaultError} from "../models/vault-error.model";
 
 const fs = require("fs");
 const config = require("../config");
@@ -40,4 +41,20 @@ exports.getVaults = function() : Vault[] | null {
     let vaults = JSON.parse(vaultsContent) as Vault[];
 
     return vaults;
+}
+
+
+/**
+ * La méthode met à jour un coffre dans le fichier de stockage
+ * @param vault Coffre à mettre à jour
+ */
+exports.updateVault = function(vault: Vault){
+    let vaults = this.getVaults();
+    if(vaults == null) throw VaultError.FS_VAULT_READING_FAILED;
+
+    vaults = vaults.filter(v => v.id != vault.id);
+    vaults.push(vault);
+
+    this.ereaseAndWriteStorage(vaults);
+    return true;
 }

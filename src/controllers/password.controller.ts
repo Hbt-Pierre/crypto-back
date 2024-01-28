@@ -3,95 +3,64 @@ import {Vault} from "../models/vault.model";
 import {SensitiveData} from "../models/sensitive-data.model";
 
 const storageUtils = require('../utils/storage.utils')
-const cryptoUtils = require('../utils/crypto.utils')
 const vaultUtils = require('../utils/vault.utils')
 
-/**
- * Fonction de création d'un nouveau coffre
- *
- * @param req - L'objet de requête Express.
- * @param res - L'objet de réponse Express.
- */
-exports.create = async function (req: Request, res: Response) {
 
-    //Contrôle des arguments
-    const masterKey = req.body["password"]
-    const name = req.body["name"]
+exports.delete = async function (req: Request, res:Response) {
+    const vPass = req.body["vaultPassword"];
+    const vId = req.body["id"];
 
-    if(masterKey == undefined){
-        res.status(400).json({error : "Merci d'ajouter le mot de passe maitre"});
-        return
-    }
+    const sdId = req.body["passwordId"];
 
-    if(name == undefined){
-        res.status(400).json({error : "Merci d'ajouter le nom du coffre"});
-        return
-    }
-
-    //Création du coffre
-    let vaults = storageUtils.getVaults();
-    if(vaults == null){
-        res.status(500).json({error : "Une erreur est survenue lors de la lecture du fichier de stockage :("})
-        return;
-    }
-
-    if(vaults.find(v => v.name == name) != null){
-        res.status(409).json({error : "Un coffre porte déjà ce nom là :("})
-        return;
-    }
-
-    let sensitiveContent = [] as SensitiveData[];
-    let jsonContent = JSON.stringify(sensitiveContent);
-
-    let newVault = {
-        id : new Date().getTime(),
-        name : name,
-        content : cryptoUtils.encrypt(jsonContent,masterKey),
-        verification: cryptoUtils.hash(jsonContent)
-    } as Vault;
-
-    vaults.push(newVault);
-
-    //Mise à jour
-    storageUtils.ereaseAndWriteStorage(vaults);
-    res.status(201).json(newVault);
-};
-
-/**
- * Fonction de lecture d'un coffre
- *
- * @param req - L'objet de requête Express.
- * @param res - L'objet de réponse Express.
- */
-exports.open = async function (req: Request, res:Response) {
-
-    //Contrôle des arguments
-    const masterKey = req.query["password"];
-    const vId = req.query["id"];
-
-    if(!masterKey && !vId){
-        //Si aucun paramètre, on liste les coffres
-
-        res.json(storageUtils.getVaults());
-        return;
-    }
-
-
-    if(masterKey == undefined){
-        res.status(400).json({error : "Merci d'ajouter le mot de passe maitre"});
-        return
-    }
-
-    if(vId == undefined){
-        res.status(400).json({error : "Merci d'ajouter l'identifiant du coffre"});
+    if(!vPass || !vId || !sdId){
+        res.status(400).json({error : "Merci d'ajouter dans le corps de la requête les valeurs suivantes : id,vaultPassword,passwordId"});
         return
     }
 
     //On récupère le fichier
     try{
-        let vault = vaultUtils.openVault(vId,masterKey);
-        res.json(vault);
+        let vault = vaultUtils.openVault(vId,vPass);
+        vault.content = vault.content.filter(sd => sd.id != sdId)
+
+        let lockedVault = vaultUtils.lockVault(vault,vPass);
+
+        storageUtils.updateVault(lockedVault)
+        res.status(200).json(vault);
     }catch (err){
         res.status(err.httpCode).json({error: err.msg});
     }
-};
+}
+exports.edit = async function (req: Request, res:Response) {}
+
+
+exports.add = async function (req: Request, res:Response) {
+
+    const vPass = req.body["vaultPassword"];
+    const vId = req.body["id"];
+
+    const sdLabel = req.body["label"];
+    const sdPassword = req.body["password"];
+
+    if(!vPass || !vId || !sdLabel || !sdPassword){
+        res.status(400).json({error : "Merci d'ajouter dans le corps de la requête les valeurs suivantes : id,vaultPassword,label,password"});
+        return
+    }
+
+    //On récupère le fichier
+    try{
+        let vault = vaultUtils.openVault(vId,vPass);
+
+        vault.content.push({
+            id : new Date().getTime(),
+            label: sdLabel,
+            password: sdPassword
+        } as SensitiveData);
+
+        let lockedVault = vaultUtils.lockVault(vault,vPass);
+        storageUtils.updateVault(lockedVault);
+
+        res.status(200).json(vault);
+    }catch (err){
+        res.status(err.httpCode).json({error: err.msg});
+    }
+}

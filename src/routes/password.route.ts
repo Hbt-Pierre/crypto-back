@@ -1,12 +1,14 @@
-const express = require('express');
+import express from 'express';
+
 const router = express.Router();
 
 //Import du controller
-const vaultController = require("../controllers/vault.controller");
+const passwordController = require("../controllers/password.controller");
 
 
-router.post('/',vaultController.create);
-router.get('/',vaultController.open);
+router.delete('/',passwordController.delete);
+router.put('/',passwordController.edit);
+router.post('/',passwordController.add);
 
 
 module.exports = router
