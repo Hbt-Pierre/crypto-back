@@ -2,6 +2,7 @@ import {Request, Response} from 'express';
 import {Vault} from "../models/vault.model";
 import {SensitiveData} from "../models/sensitive-data.model";
 import path from "node:path";
+import {OpenVault} from "../models/open-vault.model";
 
 const storageUtils = require('../utils/storage.utils')
 const cryptoUtils = require('../utils/crypto.utils')
@@ -148,7 +149,7 @@ exports.exportId = async (req: Request, res: Response, next: Function) => {
         });
         res.status(200).sendFile(tmpFilePath);
         await fs.rm(tmpFilePath, (err: any) => {
-            if (err){
+            if (err) {
                 next("Erreur lors de l'export du fichier");
             } else {
                 console.log("Suppression fichier temporaire :", vaultId);
@@ -156,6 +157,50 @@ exports.exportId = async (req: Request, res: Response, next: Function) => {
         })
     } catch (err) {
         res.status(err.httpCode).json({error: err.msg});
+    }
+
+}
+
+exports.importId = async (req: Request, res: Response, next: Function) => {
+
+    //Vérif du mot de passe avant cryptage
+
+    const masterKey = req.body.password;
+
+    if (!masterKey) {
+        res.status(400).json({error: "Merci d'utiliser le formulaire et de ne pas jouer avec l'appli sinon, je te déglingue !"})
+        return;
+    }
+
+    //Récupérer le fichier et faire les vérifs dessus
+    const file = req.files.vault as any;
+
+    if (!file) {
+        res.status(400).json({error: "Merci d'ajouter un fichier"});
+        return;
+    }
+
+    const extension: string = file.name.split(".").pop();
+
+    if (file.mimetype !== "application/json" || extension !== "json") {
+        res.status(400).json({error: "Merci de fournir un fichier valide"});
+        return;
+    }
+    const clearVault: OpenVault = JSON.parse(file.data);
+    let newVault = {
+        id: new Date().getTime(),
+        name: clearVault.name,
+        content: cryptoUtils.encrypt(clearVault.content, masterKey),
+        verification: cryptoUtils.hash(clearVault.content)
+    } as Vault;
+
+    try {
+        storageUtils.updateVault(newVault)
+        res.status(200).end();
+        return;
+    } catch (e) {
+        res.status(e.httpCode).json({error: "Erreur serveur"});
+        return;
     }
 
 }
