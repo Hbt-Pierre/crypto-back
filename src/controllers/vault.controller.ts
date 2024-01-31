@@ -157,6 +157,8 @@ exports.importId = async (req: Request, res: Response, next: Function) => {
 
     const file = req.files.vault as any;
 
+    let tempFileData = await fs.readFileSync('./' + file.tempFilePath)
+
     if (!file) {
         res.status(400).json({error: "Merci d'ajouter un fichier"});
         return;
@@ -168,7 +170,8 @@ exports.importId = async (req: Request, res: Response, next: Function) => {
         res.status(400).json({error: "Merci de fournir un fichier valide"});
         return;
     }
-    const clearVault: OpenVault = JSON.parse(file.data);
+
+    const clearVault: OpenVault = JSON.parse(tempFileData);
     const json = JSON.stringify(clearVault.content);
     let newVault = {
         id: new Date().getTime(),
@@ -179,6 +182,9 @@ exports.importId = async (req: Request, res: Response, next: Function) => {
 
     try {
         storageUtils.updateVault(newVault)
+
+        await fs.rmSync('./' + file.tempFilePath)
+
         res.status(200).json(newVault);
         return;
     } catch (e) {
