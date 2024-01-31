@@ -1,4 +1,5 @@
 import express from 'express';
+import fileUpload from "express-fileupload";
 
 const app = express();
 const bodyParser = require('body-parser');
@@ -11,8 +12,8 @@ const cors = require('cors')
 const vaultRoute = require("./routes/vault.route");
 const passwordRoute = require("./routes/password.route");
 app.use(bodyParser.json());
+app.use(fileUpload());
 app.use(cors())
-
 
 //Déclaration des routes
 app.use("/vault",vaultRoute);
