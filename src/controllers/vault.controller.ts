@@ -130,32 +130,9 @@ exports.exportId = async (req: Request, res: Response, next: Function) => {
     //On récupère le fichier
     try {
         let vault = vaultUtils.openVault(vaultId, masterKey);
-        const options = {
-            root: path.join(__dirname, 'public'),
-            dotfiles: 'deny',
-            headers: {
-                'x-timestamp': Date.now(),
-                'x-sent': true
-            }
-        }
-        const tmpFilePath = "./tmp/tmpJson.json"
-        await fs.writeFile(tmpFilePath, JSON.stringify(vault), options, (err: any) => {
-            if (err) {
-                next("Erreur lors de l'export du fichier");
-            } else {
-                console.log("Ecriture fichier temporaire :", vaultId);
-            }
-        });
-        res.status(200).sendFile(tmpFilePath);
-        await fs.rm(tmpFilePath, (err: any) => {
-            if (err){
-                next("Erreur lors de l'export du fichier");
-            } else {
-                console.log("Suppression fichier temporaire :", vaultId);
-            }
-        })
+        res.status(200).json(vault);
     } catch (err) {
-        res.status(err.httpCode).json({error: err.msg});
+        res.status(500).json({error: err.msg});
     }
 
 }
