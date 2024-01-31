@@ -12,7 +12,10 @@ const cors = require('cors')
 const vaultRoute = require("./routes/vault.route");
 const passwordRoute = require("./routes/password.route");
 app.use(bodyParser.json());
-app.use(fileUpload());
+app.use(fileUpload({
+    useTempFiles : true,
+    tempFileDir : './tmp/'
+}));
 app.use(cors())
 
 //Déclaration des routes
