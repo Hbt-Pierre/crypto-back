@@ -5,6 +5,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const config = require("./config");
 const storageUtils = require("./utils/storage.utils");
+const cors = require('cors')
 
 
 //Import des routes
@@ -12,6 +13,7 @@ const vaultRoute = require("./routes/vault.route");
 const passwordRoute = require("./routes/password.route");
 app.use(bodyParser.json());
 app.use(fileUpload());
+app.use(cors())
 
 //Déclaration des routes
 app.use("/vault",vaultRoute);
