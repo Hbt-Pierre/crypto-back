@@ -1,4 +1,5 @@
 import express from 'express';
+import fileUpload from "express-fileupload";
 
 const app = express();
 const bodyParser = require('body-parser');
@@ -10,7 +11,7 @@ const storageUtils = require("./utils/storage.utils");
 const vaultRoute = require("./routes/vault.route");
 const passwordRoute = require("./routes/password.route");
 app.use(bodyParser.json());
-
+app.use(fileUpload());
 
 //Déclaration des routes
 app.use("/vault",vaultRoute);

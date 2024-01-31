@@ -165,14 +165,18 @@ exports.importId = async (req: Request, res: Response, next: Function) => {
 
     //Vérif du mot de passe avant cryptage
 
-    const masterKey = req.body.password;
-
+    const masterKey = req.query.password;
     if (!masterKey) {
         res.status(400).json({error: "Merci d'utiliser le formulaire et de ne pas jouer avec l'appli sinon, je te déglingue !"})
         return;
     }
 
     //Récupérer le fichier et faire les vérifs dessus
+    if (!req.files){
+        res.status(400).json({error: "Merci d'ajouter un fichier"});
+        return;
+    }
+
     const file = req.files.vault as any;
 
     if (!file) {
