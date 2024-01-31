@@ -96,7 +96,7 @@ exports.open = async function (req: Request, res: Response) {
         let vault = vaultUtils.openVault(vId, masterKey);
         res.json(vault);
     } catch (err) {
-        res.status(err.httpCode).json({error: err.msg});
+        res.status(500).json({error: err.msg});
     }
 };
 
@@ -168,19 +168,20 @@ exports.importId = async (req: Request, res: Response, next: Function) => {
         return;
     }
     const clearVault: OpenVault = JSON.parse(file.data);
+    const json = JSON.stringify(clearVault.content);
     let newVault = {
         id: new Date().getTime(),
         name: clearVault.name,
-        content: cryptoUtils.encrypt(clearVault.content, masterKey),
-        verification: cryptoUtils.hash(clearVault.content)
+        content: cryptoUtils.encrypt(json, masterKey),
+        verification: cryptoUtils.hash(json)
     } as Vault;
 
     try {
         storageUtils.updateVault(newVault)
-        res.status(200).end();
+        res.status(200).json(newVault);
         return;
     } catch (e) {
-        res.status(e.httpCode).json({error: "Erreur serveur"});
+        res.status(500).json({error: "Erreur serveur"});
         return;
     }
 
