@@ -131,7 +131,7 @@ exports.exportId = async (req: Request, res: Response, next: Function) => {
 
     //On récupère le fichier
     try {
-        let vault = vaultUtils.openVault(vaultId, masterKey);
+        let { verification, ...vault } = vaultUtils.openVault(vaultId, masterKey);
         res.status(200).json(vault);
     } catch (err) {
         res.status(500).json({error: err.msg});
