@@ -9,6 +9,7 @@ const cryptoUtils = require('../utils/crypto.utils')
 const vaultUtils = require('../utils/vault.utils')
 
 const fs = require("fs");
+const mime = require('mime-types');
 
 /**
  * Fonction de création d'un nouveau coffre
@@ -163,7 +164,7 @@ exports.importId = async (req: Request, res: Response, next: Function) => {
 
     const extension: string = file.name.split(".").pop();
 
-    if (file.mimetype !== "application/json" || extension !== "json") {
+    if (mime.lookup("../tmp/" + file.name) !== "application/json" || file.mimetype !== "application/json" || extension !== "json") {
         res.status(400).json({error: "Merci de fournir un fichier valide"});
         return;
     }
